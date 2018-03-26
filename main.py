@@ -4,11 +4,12 @@ import urllib3
 
 from bs4 import BeautifulSoup
 
+import config
+
 def notify_pushbullet(pool_manager, title, message):
 	pushbullet_url = 'https://api.pushbullet.com/v2/pushes'
-	access_token = ''
 	headers = {
-		'Access-Token' : access_token,	
+		'Access-Token' : config.PUSHBULLET_API_KEY,	
 		'Content-Type' : 'application/json',
 	}
 
