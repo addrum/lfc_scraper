@@ -6,7 +6,9 @@ from bs4 import BeautifulSoup
 
 import config
 
-def notify_pushbullet(pool_manager, title, message):
+http = urllib3.PoolManager()
+
+def notify_pushbullet(message):
 	pushbullet_url = 'https://api.pushbullet.com/v2/pushes'
 	headers = {
 		'Access-Token' : config.PUSHBULLET_API_KEY,	
@@ -14,32 +16,35 @@ def notify_pushbullet(pool_manager, title, message):
 	}
 
 	body = {
-		'title' : title,
+		'title' : "LFC Tickets",
 		'body' : message,
 		'type' : 'note',
 	}
 
 	encoded_data = json.dumps(body).encode('utf-8')
 
-	response = pool_manager.request('POST', pushbullet_url, headers=headers, body=encoded_data)
+	response = http.request('POST', pushbullet_url, headers=headers, body=encoded_data)
 	print(response.data)
 	
 tickets_url = 'http://www.liverpoolfc.com/tickets/tickets-availability'
 
-http = urllib3.PoolManager()
-
 response = http.request('GET', tickets_url)
 soup = BeautifulSoup(response.data, 'html.parser')
 
-tag_to_search = 'span'
-regex_to_search = r'.*Additional Members Sale.*'
-
-sale_spans = soup.find_all(tag_to_search, string=re.compile(regex_to_search))
+sale_spans = soup.find_all('span', string=re.compile(r'.*Additional Members Sale.*'))
 
 # .parent.parent.parent get's the outer "saleWrap" div which contains the buy buttons
 sale_divs = [div.parent.parent.parent for div in sale_spans]
 
-for div in sale_divs:
-	btns = div.find_all('div', 'orangeBtn')
+check_availability_buttons = [div.find('a', class_='ticketBtn') for div in sale_divs if div.find('a', class_='ticketBtn')]
 
-print([div.find_all('div', class_='orangeBtn') for div in sale_divs])
+if check_availability_buttons is None or []:
+	notify_pushbullet("No tickets found")
+
+# https://stackoverflow.com/a/16720705/1860436 - apparently
+match_info_regex = re.compile(r'\(\d+\)')
+for button in check_availability_buttons:
+	match_info = button['data-gtm-value']
+	match_info = match_info_regex.sub("", match_info).strip()
+	message = "{} tickets available!".format(match_info)
+	notify_pushbullet(message)
