@@ -36,7 +36,7 @@ sale_spans = soup.find_all('span', string=re.compile(r'.*Additional Members Sale
 # .parent.parent.parent gets the outer "saleWrap" div which contains the buy buttons
 sale_divs = [div.parent.parent.parent for div in sale_spans]
 
-check_availability_buttons = [a for a in [div.find('a', class_='ticketBtn') for div in sale_divs] if a]
+check_availability_buttons = filter(bool, [div.find('a', class_='ticketBtn') for div in sale_divs])
 
 if check_availability_buttons is None or []:
 	notify_pushbullet("No tickets found")
