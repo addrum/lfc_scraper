@@ -33,7 +33,7 @@ soup = BeautifulSoup(response.data, 'html.parser')
 
 sale_spans = soup.find_all('span', string=re.compile(r'.*Additional Members Sale.*'))
 
-# .parent.parent.parent get's the outer "saleWrap" div which contains the buy buttons
+# .parent.parent.parent gets the outer "saleWrap" div which contains the buy buttons
 sale_divs = [div.parent.parent.parent for div in sale_spans]
 
 check_availability_buttons = [div.find('a', class_='ticketBtn') for div in sale_divs if div.find('a', class_='ticketBtn')]
